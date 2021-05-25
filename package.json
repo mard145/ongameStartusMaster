@@ -1,0 +1,24 @@
+{
+  "name": "ongamestartus2013-master",
+  "version": "1.0.0",
+  "description": "Promo game site for onGameStart US 2013, more info @ ongamestart.us",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon babel-node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.13.15",
+    "@babel/node": "^7.13.13",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-env": "^7.13.15",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "socket.io": "^4.0.1",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}

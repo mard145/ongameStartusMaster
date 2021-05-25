@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+
+
+<html class="no-js" lang="en">
+
+
+<head>
+
+	
+
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>onGameStart US 2013</title>
+	<script>
+		const ROOM_ID = "<%= roomId %>"
+	</script>
+<script defer src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+<script defer src="/socket.io/socket.io.js"></script>
+<script   src="/js/ioo.js"></script>
+
+	<meta name="title" content="onGameStart US 2013">
+	<meta name="description" content="onGameStart US: HTML5 Game Conference">
+
+	<meta name="author" content="Conference: Michal Budzynski, Website: Collin Hover">
+	<meta name="copyright" content="Copyright onGameStartUS. All Rights Reserved.">
+
+	<!-- Dublin Core Metadata : http://dublincore.org/ -->
+	<meta name="DC.title" content="onGameStart US 2013">
+	<meta name="DC.subject" content="onGameStart US: HTML5 Game Conference">
+	<meta name="DC.creator" content="Conference: Michal Budzynski, Website: Collin Hover">
+
+	<!-- Facebook metadata: http://developers.facebook.com/docs/share/ -->
+	<meta property="og:title" content="onGameStart US 2013" />
+	<meta property="og:description" content="onGameStart US: HTML5 Game Conference" />
+	<meta property="og:image" content="img/apple-touch-icon-precomposed.png" />
+
+	<meta name="viewport" content="width=device-width">
+
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="apple-touch-icon" href="img/apple-touch-icon-precomposed.png">
+
+	<!-- LESS for development only -->
+	<link rel="stylesheet/less" type="text/css" href="less/main.less">
+	<script src="js/lib/less-1.3.1.min.js" type="text/javascript"></script>
+
+	<!-- CSS -->
+	<!--<link rel="stylesheet" type="text/css" href="css/main.css">-->
+
+	<!-- setup javascript only -->
+	<script src="js/lib/modernizr-2.6.2.min.js"></script>
+
+
+	<!-- Prompt IE 6 users to install Chrome Frame. chromium.org/developers/how-tos/chrome-frame-getting-started -->
+	<!--[if lt IE 7 ]>
+		<script defer src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+		<script defer>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+	  <![endif]-->
+	<style>
+		#message {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translateX(-50%) translateY(-50%);
+			font-family: 'Kavivanar', san-serif;
+			font-size: 40px;
+			width: 80%;
+			max-width: 280px;
+			padding: 15px 15px 50px 15px;
+			text-align: center;
+			display: none;
+			align-content: center;
+			justify-content: center;
+			background-color: aliceblue;
+			border: medium solid #3D455C;
+			border-radius: 20px;
+			color: #3D455C;
+			z-index: 99;
+		}
+
+		#message_ok {
+			position: absolute;
+			bottom: 10px;
+			padding: 10px 20px 10px 20px;
+			font-family: sans-serif;
+			font-size: 20px;
+			background-color: #3D455C;
+			color: #fff;
+			border-radius: 8px;
+			border: medium solid #696882;
+		}
+
+		#chat {
+			position: absolute;
+			width: 100%;
+			height: 40px;
+			bottom: -40px;
+			transition: all 0.5s;
+		}
+
+		form {
+			background: #000;
+			padding: 3px;
+			width: 100%;
+		}
+
+		form input {
+			border: 0;
+			padding: 10px;
+			width: 88%;
+			margin-right: .5%;
+		}
+
+		form button {
+			width: 8%;
+			background: rgb(130, 224, 255);
+			border: none;
+			padding: 10px;
+		}
+
+		#video-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, 200px);
+			grid-auto-rows: 200px;
+		}
+
+		video {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+	</style>
+
+</head>
+
+<body>
+	<div style="position: absolute;" id="video-grid"></div>
+
+	<div id="message">
+		<p style="color: #000;" id="message_text"></p>
+		<button id="message_ok">OK</button>
+	</div>
+	<div id="chat">
+		<form id="msg-form" action="">
+			<input id="m" autocomplete="off" /><button>Send</button>
+		</form>
+	</div>
+
+	<div id="game" class="unselectable">
+
+		<div id="uiInGame" class="unselectable ignore-pointer">
+
+		</div>
+		<!-- /uiInGame -->
+
+	</div>
+	<!-- /game -->
+
+	<!-- ui -->
+	<div id="ui" class="ignore-pointer">
+
+		<div id="uiOverGame" class="ignore-pointer">
+
+		</div>
+		<!-- /uiOverGame -->
+
+		<div id="uiPlayer" class="ignore-pointer">
+
+			<div class="ui-pane-column ui-pane-left">
+
+				<div class="ui-pane-section-body">
+
+					<ul class="unstyled nav-game nav-skewed-upright nav-opacity-lite tab-toggles">
+						<li>
+							<a href="#" class="game-pause btn btn-inverse btn-tab-right">
+								<img src="img/pause_64.png" class="iconk-large">
+							</a>
+						</li>
+					</ul>
+
+					<div id="playerState" class="invisible">
+
+						<div class="player-health progress progress-danger">
+							<div class="bar" style="width: 100%;"></div>
+							<img src="img/heart_rev_64.png" class="iconk dim">
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+			<div class="ui-pane-column ui-pane-middle">
+				<div class="ui-pane-section-body">
+
+					<div id="playerMessages" class="ui-pane-section-quarter-top-middle container-center"></div>
+
+				</div>
+
+			</div>
+
+			<div class="ui-pane-column ui-pane-right">
+
+				<div class="ui-pane-section-body">
+
+					<div id="playerTarget" class="invisible">
+
+						<ul class="unstyled nav-game nav-skewed-upleft nav-opacity-lite tab-toggles">
+							<li class="clearfix">
+								<a href="#" id="playerTargetInteract" class="btn btn-inverse btn-tab-left"
+									alt="Interact">
+									<img src="img/chat_64.png" class="iconk-large">
+								</a>
+							</li>
+						</ul>
+
+						<div id="playerTargetPortrait">
+							<div class="target-image"></div>
+							<p class="target-name"></p>
+						</div>
+						<!--
+						<a href="#" id="playerTargetInteract" class="btn btn-inverse btn-circle btn-semicircle-left" alt="Interact">
+							<img src="img/talk_rev_64.png" class="iconk-large">
+						</a>
+						-->
+					</div>
+
+				</div>
+
+			</div>
+
+		</div>
+		<!-- /uiPlayer -->
+
+		<div id="uiGameDimmer" class="unselectable"></div>
+
+		<div id="uiScrollable" class="ignore-pointer">
+
+			<header id="social" class="ui-pane-overlay container-center">
+
+				<h1 class="visuallyhidden">onGameStart US: HTML5 Game Conference</h1>
+
+				<ul class="nav nav-pills nav-inline nav-opacity nav-transparent">
+					<li>
+						<a href="mailto: info@ongamestart.com" target="_blank">
+							<img src="img/email_64.png" class="iconk-small">
+							<h6 class="inline-type">info@ongamestart.com</h6>
+						</a>
+					</li>
+					<li>
+						<a href="http://twitter.com/onGameStart" target="_blank">
+							<img src="img/twitter_64.png" class="iconk-small">
+							<h6 class="inline-type">Twitter</h6>
+						</a>
+					</li>
+					<li>
+						<a href="https://www.facebook.com/onGameStart" target="_blank">
+							<img src="img/facebook_alt_64.png" class="iconk-small">
+							<h6 class="inline-type">Facebook</h6>
+						</a>
+					</li>
+					<li>
+						<a href="http://lanyrd.com/2013/ogsus/" target="_blank">
+							<img src="img/talk_64.png" class="iconk-small">
+							<h6 class="inline-type">Lanyrd</h6>
+						</a>
+					</li>
+					<li>
+						<a href="https://github.com/collinhover/ongamestartus2013" target="_blank">
+							<img src="img/github_64.png" class="iconk-small">
+							<h6 class="inline-type">Code</h6>
+						</a>
+					</li>
+				</ul>
+
+			</header>
+			<!-- /social -->
+
+			<ul id="navMainAlt"
+				class="ui-pane-overlay ui-pane-left unstyled nav-game nav-skewed-upright nav-opacity-lite tab-toggles hidden">
+				<li>
+					<a href="http://www.amiando.com/onGameStartUS.html" target="_blank"
+						class="btn btn-inverse btn-tab-right">
+						<img src="img/ticket_64.png" class="iconk-large">
+					</a>
+				</li>
+				<li>
+					<a href="#" class="game-resume btn btn-inverse btn-tab-right">
+						<img src="img/play_64.png" class="iconk-large">
+					</a>
+				</li>
+				<li>
+					<a href="#howto" class="btn btn-inverse btn-tab-right">
+						<img src="img/cog_64.png" class="iconk-large">
+					</a>
+				</li>
+				<li>
+					<a href="#about" class="btn btn-inverse btn-tab-right">
+						<img src="img/info_64.png" class="iconk-large">
+					</a>
+				</li>
+				<li>
+					<a href="#speakers" class="btn btn-inverse btn-tab-right">
+						<img src="img/chat_64.png" class="iconk-large">
+					</a>
+				</li>
+				<li>
+					<a href="https://docs.google.com/spreadsheet/viewform?formkey=dEMwZHQtcXp6Mjh0MGhoRnRKTzF3SUE6MQ"
+						target="_blank" class="btn btn-inverse btn-tab-right">
+						<img src="img/application_64.png" class="iconk-large">
+					</a>
+				</li>
+			</ul>
+			<!-- /navMainAlt -->
+
+			<!-- uiOutGame -->
+			<div id="uiOutGame">
+
+				<section id="menuMain" class="unselectable menu theme-dark theme-transparent active">
+
+					<div class="menu-inner container">
+
+						<header id="headerMain" class="selectable-text subhead menu-section">
+
+							<div class="container-center">
+
+								<div class="logo-group">
+									<div class="logo">
+										<h1 class="logo-type visuallyhidden">onGameStart US 2013</h1>
+										<img src="img/logo.png" alt="onGameStart US 2013" class="iconk">
+										<h3 class="sidekick-type scifi-type shadowed-type">March 15, 2013</h3>
+									</div>
+								</div>
+
+							</div>
+
+						</header>
+						<!-- /headerMain -->
+
+						<section id="noscript" class="container-center menu-section">
+							<div class="well error">
+								<h2 class="error-header logo-type">Javascript disabled?</h2>
+								<p><small class="error-body">Sorry, but we can't seem to find Javascript... if you are
+										sure you've turned it on, try upgrading to one of these friendly
+										browsers:</small></p>
+								<ul class="nav nav-inline nav-transparent browsers">
+									<li>
+										<a href="http://www.google.com/chrome/" target="_blank"
+											class="chrome">Chrome</a>
+									</li>
+									<li>
+										<a href="http://www.mozilla.org/firefox/" target="_blank"
+											class="firefox">Firefox</a>
+									</li>
+									<li>
+										<a href="http://www.apple.com/safari/" target="_blank" class="safari">Safari</a>
+									</li>
+								</ul>
+							</div>
+						</section>
+
+						<section id="preloader" class="container-center">
+							<div class="menu-section">
+								<p><img src='img/waiting_rev_64.png' class="iconk-huge">Hold on, we're loading a few
+									things...</p>
+								<p><small>(if you've been waiting too long, <a href='index.html'>refresh</a> and we'll
+										try to load faster!)</small></p>
+							</div>
+						</section>
+
+						<section id="navMain" class="hidden">
+
+							<div class="row">
+								<div class="span4 offset4">
+									<ul class="nav nav-game nav-skewed-upright tab-toggles">
+										<li>
+											<a href="http://www.amiando.com/onGameStartUS.html" target="_blank"
+												class="">Get Free Tickets!</a>
+										</li>
+										<li>
+											<a href="#" class="game-start">Play</a>
+										</li>
+										<li>
+											<a href="#howto">Controls</a>
+										</li>
+										<li>
+											<a href="#about">About</a>
+										</li>
+										<li>
+											<a href="#speakers">Speakers</a>
+										</li>
+										<li>
+											<a href="https://docs.google.com/spreadsheet/viewform?formkey=dEMwZHQtcXp6Mjh0MGhoRnRKTzF3SUE6MQ"
+												target="_blank">Become a Speaker</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+
+						</section>
+						<!-- /navMain -->
+
+					</div>
+
+				</section>
+				<!-- /menuMain -->
+
+				<section id="menuInactive" class="menu hidden">
+
+				</section>
+				<!-- /menuInactive -->
+
+				<section id="menuActive" class="menu theme-dark theme-transparent hidden">
+
+					<div class="menu-inner container">
+
+					</div>
+
+				</section>
+				<!-- /menuActive -->
+
+				<section id="howto" class="selectable-text menu theme-dark theme-transparent hidden">
+
+					<div class="menu-inner container">
+
+						<header class="subhead menu-section">
+							<div class="container-center">
+								<img src="img/cog_rev_64.png" alt="" class="iconk-giant">
+								<h1 class="inline-type">How to Play</h1>
+								<h2 class="sidekick-type">Mouse & Keyboard <span class="dim"><span class="strike">&
+											Touch</span> <small>(soon!)</small></span></h2>
+							</div>
+							<!--
+						  <div id="navHowto" class="subnavbar is-sticky">
+							  <div class="navbar-inner">
+								  <div class="container">
+									  <ul class="nav nav-pills pull-left">
+										  <li><a href="#controls">Controls</a></li>
+									  </ul>
+									  <ul class="nav nav-pills pull-right visible-desktop">
+										  <li><a href="#howto"><h6>top</h6></a></li>
+									  </ul>
+								  </div>
+							  </div>
+						  </div>
+						  -->
+						</header>
+
+						<section id="gameplay" class="menu-section">
+
+							<div class="row">
+
+								<div class="span4">
+									<img src="img/speakers.png" alt="Speakers">
+									<h2>Speakers</h2>
+									<p>We've got a great line up for onGameStart 2013. Talk to each of our speakers in
+										game to unlock their full profiles!</p>
+								</div>
+								<div class="span4">
+									<img src="img/platforming.png" alt="Platforming">
+									<h2>Platforming</h2>
+									<p>Run, jump, and slide your way through the environment. Watch out for spikes,
+										fire, and other alien dangers!</p>
+								</div>
+								<div class="span4">
+									<img src="img/multi_gravity.png" alt="Gravity">
+									<h2>Multi-Gravity</h2>
+									<p>Multiple planets, each with their own gravity field. Hope you ate a light lunch!
+									</p>
+								</div>
+
+							</div>
+
+						</section>
+						<!-- /gameplay -->
+
+						<section id="controls" class="menu-section">
+
+							<div class="page-header">
+								<h1>Controls</h1>
+							</div>
+
+							<div class="row container-center">
+
+								<div class="span2">
+									<div class="well">
+										<img src="img/key_wasd_rev_64.png" alt="">
+									</div>
+									<h3 class="inline-type">Move</h3>
+									<p>with a wasd</p>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="img/key_arrows_rev_64.png" alt="">
+									</div>
+									<h3 class="inline-type">Move</h3>
+									<p>with arrow keys.</p>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="img/key_space_rev_64.png" alt="">
+									</div>
+									<h3 class="inline-type">Jump</h3>
+									<p>with spacebar.</p>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="img/tap_rev_64.png" alt="">
+									</div>
+									<h3 class="inline-type">Select</h3>
+									<p>with tap.</p>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="img/tap_double_rev_64.png" alt="">
+									</div>
+									<h3 class="inline-type">Interact</h3>
+									<p>with double tap.</p>
+								</div>
+								<div class="span2">
+									<div class="well">
+										<img src="img/drag_move_rev_64.png" alt="">
+									</div>
+									<h3 class="inline-type">Look</h3>
+									<p>with drag move.</p>
+								</div>
+
+							</div>
+
+						</section>
+						<!-- /controls -->
+
+					</div>
+
+				</section>
+				<!-- /howto -->
+
+				<section id="about" class="selectable-text menu theme-dark theme-transparent hidden">
+
+					<div class="menu-inner container">
+
+						<header class="subhead menu-section">
+							<div class="container-center">
+								<img src="img/info_rev_64.png" class="iconk-giant">
+								<h1 class="inline-type">About</h1>
+								<h2 class="sidekick-type">onGameStart: the Web + Games Conference<br>March 15, 2013</h2>
+
+								<section id="sponsors">
+
+									<h6 class="sponsor-title">Jupiter Diamond Sponsors</h6>
+									<div class="sponsors-diamond grid-gutterless">
+										<ul class="thumbnails thumbnails4 shadowless borderless">
+											<li class="thumbnail">
+												<a href="#" class="sponsor"></a>
+											</li>
+										</ul>
+									</div>
+									<!-- /sponsorsDiamond -->
+
+									<h6 class="sponsor-title">Saturn Platinum Sponsors</h6>
+									<div class="sponsors-platinum grid-gutterless">
+										<ul class="thumbnails thumbnails4 shadowless borderless">
+											<li class="thumbnail">
+												<a href="#" class="sponsor"></a>
+											</li>
+										</ul>
+									</div>
+									<!-- /sponsorsPlatinum -->
+
+									<h6 class="sponsor-title">Neptune Gold Sponsors</h6>
+									<div class="sponsors-gold grid-gutterless">
+										<ul class="thumbnails thumbnails4 shadowless borderless">
+											<li class="thumbnail">
+												<a href="#" class="sponsor"></a>
+											</li>
+										</ul>
+									</div>
+									<!-- /sponsorsGold -->
+
+									<h6 class="sponsor-title">Earth Silver Sponsors</h6>
+									<div class="sponsors-silver grid-gutterless">
+										<ul class="thumbnails thumbnails4 shadowless borderless">
+											<li class="thumbnail">
+												<a href="#" class="sponsor"></a>
+											</li>
+										</ul>
+									</div>
+									<!-- /sponsorsSilver -->
+
+									<ul class="sponsor-button nav nav-game nav-skewed-upright">
+										<li>
+											<a href="img/sponsors.pdf" target="_blank">Sponsor the Event!</a>
+										</li>
+										<li>
+											<a href="http://www.amiando.com/onGameStartUS.html" target="_blank"
+												class="">Get Free Tickets!</a>
+										</li>
+									</ul>
+
+								</section>
+								<!-- /sponsors -->
+
+							</div>
+							<!--<div id="navAbout" class="subnavbar is-sticky">
+							  <div class="navbar-inner">
+								  <div class="container">
+									  <ul class="nav nav-pills pull-left">
+										  <li><a href="#description">Description</a></li>
+										  <li><a href="#location">Location</a></li>
+									  </ul>
+									  <ul class="nav nav-pills pull-right visible-desktop">
+										  <li><a href="#about"><h6>top</h6></a></li>
+									  </ul>
+								  </div>
+							  </div>
+						  </div>-->
+						</header>
+
+						<section id="description" class="menu-section">
+
+							<div class="page-header">
+								<h1>Topics</h1>
+							</div>
+
+							<div class="row">
+
+								<div class="span3">
+									<img src="img/html.png" alt="HTML" class="iconk-spacebottom">
+									<h6>Make it</h6>
+									<h2>Open</h2>
+									<p>We support the web as a space for open game development and collaboration. Come
+										learn from our experience and share what you know!</p>
+								</div>
+								<div class="span3">
+									<img src="img/css.png" alt="CSS" class="iconk-spacebottom">
+									<h6>Make it</h6>
+									<h2>Beautiful</h2>
+									<p>You may think us shallow, but there is nothing wrong with a sexy game. Cute,
+										vibrant, creepy, or anything inbetween: bring on the eye candy!</p>
+								</div>
+								<div class="span3">
+									<img src="img/js.png" alt="JS" class="iconk-spacebottom">
+									<h6>Make it</h6>
+									<h2>Engaging</h2>
+									<p>Run, jump, punch, slash, shoot, carry, break, push, throw, swing, group, raid,
+										quest, drive, or fly. We don't care as long as it's fun!</p>
+								</div>
+								<div class="span3">
+									<img src="img/webgl.png" alt="WebGL" class="iconk-spacebottom">
+									<h6>Make it</h6>
+									<h2>Experimental</h2>
+									<p>For all the times when a new spec has made you cry, you know it's worth it in the
+										end. We &hearts; experimental!</p>
+								</div>
+
+							</div>
+
+						</section>
+						<!-- /description -->
+
+						<section id="location" class="menu-section">
+
+							<div class="page-header">
+								<h1>New York 2013</h1>
+							</div>
+
+							<div class="row">
+								<div class="span12">
+									<img src="img/location.jpg" alt="New York by Paulo Barcellos Jr."
+										class="iconk-spacebottom">
+								</div>
+							</div>
+
+							<div id="locationInfo">
+								<div class="eqheight3-container3">
+									<div class="eqheight3-container2">
+										<div class="eqheight3-container1">
+											<!-- venue -->
+											<div class="eqheight3-column">
+
+												<div class="eqheight3-content">
+													<div class="hero-anchor">
+														<img src="img/location_venue.jpg"
+															alt="Union Square Ventures Event Space"
+															class="iconk-spacebottom">
+														<h6><i class="dim icon-home icon-white"></i> Venue</h6>
+														<p class="lead">Union Square Ventures Event Space</p>
+														<a href="http://lanyrd.com/venues/new-york/vchqh/"
+															target="_blank" class="btn">More Info</a>
+													</div>
+												</div>
+
+											</div>
+											<!-- info -->
+											<div class="eqheight3-column">
+
+												<div class="eqheight3-content">
+
+													<div class="hero-anchor">
+														<img src="img/location_map.jpg"
+															alt="NYIT Auditorium on Broadway" class="iconk-spacebottom">
+														<h6><i class="dim icon-road icon-white"></i> Address</h6>
+														<p>
+															915 Broadway (between 21st and 20th)<br>
+															19th Floor<brx>
+																New York, NY 10023
+														</p>
+														<a href="http://goo.gl/maps/CZD2b" target="_blank"
+															class="btn">Google Maps</a>
+													</div>
+
+												</div>
+
+											</div>
+											<!-- party -->
+											<div class="eqheight3-column">
+
+												<div class="eqheight3-content">
+
+													<div class="hero-anchor">
+														<img src="img/location_party.jpg" alt="Party"
+															class="iconk-spacebottom">
+														<h6><i class="dim icon-fire icon-white"></i> Party</h6>
+														<p class="lead">Coming Soon!</p>
+													</div>
+
+												</div>
+
+											</div>
+
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</section>
+						<!-- /location -->
+
+						<!-- footer -->
+						<footer id="footer" class="container menu-section">
+							<div class="row">
+								<div class="span12">
+									<p>&copy; onGameStart US 2013</p>
+									<p>
+										Conference presented by <a href="http://michalbe.blogspot.com/"
+											target="_blank">Michal Budzynski</a><br />
+										Website & Game developed by <a href="http://www.collinhover.com/"
+											target="_blank">Collin Hover</a><br />
+										3D Models / Animations by <a href="http://blackmoondev.com/"
+											target="_blank">Black Moon Design</a>
+									</p>
+								</div>
+							</div>
+						</footer>
+						<!-- /footer -->
+
+					</div>
+
+				</section>
+				<!-- /about -->
+
+				<section id="speakers" class="selectable-text menu theme-dark theme-transparent hidden">
+
+					<div class="menu-inner container">
+
+						<header class="subhead menu-section">
+							<div class="container-center">
+								<img src="img/chat_rev_64.png" class="iconk-giant">
+								<h1 class="inline-type">Speakers</h1>
+								<h2 class="sidekick-type">2013 Lineup!</h2>
+							</div>
+						</header>
+
+						<section id="speakersList" class="menu-section">
+
+							<div id="speakersIntro" class="speaker well container-center">
+								<a href="#" class="speakers-show dim"><img src="img/speaker_rev_64.png"
+										class="iconk-giant"></a>
+								<p>
+									Talk to the speakers in game to unlock their full profiles here!<br>
+									<span class="sidekick-type dim">(cheat: tap the speaker icon above to reveal them
+										all)</span>
+								</p>
+							</div>
+
+						</section>
+
+					</div>
+
+				</section>
+				<!-- /speakers -->
+
+			</div>
+			<!-- /uiOutGame -->
+
+			<div id="statusInactive" class="hidden">
+
+				<section id="errorGeneral" class="status-item hidden">
+					<div class="menu-section error">
+						<h2 class="error-header logo-type">Well, this is embarrassing!</h2>
+						<p class="error-body">We tried to catch every bug, but it looks like one got through. Please let
+							us know by <a href='https://github.com/collinhover/ongamestartus2013/issues'
+								target='_blank'>submitting an issue</a> report.</p>
+						<p><code><span id='errorMessage'>Error Message</span></code><small> in file: </small><code><span
+									id='errorFile'>Filename</span> > line <span id='errorLine'>0</span></code></p>
+						<p><small>(you can also try to <a href='index.html'>refresh</a> to fix the problem)</small></p>
+					</div>
+				</section>
+
+				<section id="errorWebGLBrowser" class="status-item hidden">
+					<div class="menu-section error">
+						<h2 class="error-header logo-type">Oops, we can't find WebGL!</h2>
+						<p class="error-body">Sorry, but it appears that your <span class="underline">browser</span>
+							does not support WebGL. For more information visit <a href='http://get.webgl.org'
+								target='_blank'>Get WebGL</a> or try upgrading to one of these friendly browsers:</p>
+						<ul class="nav nav-inline nav-transparent browsers">
+							<li>
+								<a href="http://www.google.com/chrome/" target="_blank" class="chrome">Chrome</a>
+							</li>
+							<li>
+								<a href="http://www.mozilla.org/firefox/" target="_blank" class="firefox">Firefox</a>
+							</li>
+							<!-- safari doesn't enable webgl by default -->
+							<!--<li>
+							  <a href="http://www.apple.com/safari/" target="_blank" class="safari">Safari</a>
+						  </li>-->
+						</ul>
+						<p><small>(We'll try not to remind you again! <a>Tap anywhere</a> to continue...)</small></p>
+					</div>
+				</section>
+
+				<section id="errorWebGLComputer" class="status-item hidden">
+					<div class="menu-section error">
+						<h2 class="error-header logo-type">Oops, we can't find WebGL!</h2>
+						<p class="error-body">Sorry, but it appears that your <span class="underline">device</span> does
+							not support WebGL. For more information visit the <a
+								href='http://get.webgl.org/troubleshooting/' target='_blank'>WebGL troubleshooting</a>
+							page.</p>
+						<p><small>(We'll try not to remind you again! <a>Tap anywhere</a> to continue...)</small></p>
+					</div>
+				</section>
+
+			</div>
+			<!-- /inactive -->
+
+			<div id="statusActive"
+				class="ui-pane-overlay ui-pane-middle ui-pane-body-bottom container-center ignore-pointer"></div>
+			<!-- /active -->
+
+			<section id='worker'
+				class="ui-pane-overlay ui-pane-section ui-pane-body-bottom container-center ignore-pointer hidden">
+
+				<div class="worker-bar-left">
+					<div class="worker-bar container-right">
+						<div id="workerProgressBarStarted" class="progress-bar">
+							<img src='img/waiting_rev_64.png' class="iconk-small-tight">
+						</div>
+					</div>
+				</div>
+
+				<div class="worker-bar-right">
+					<div class="worker-bar container-left">
+						<div id="workerProgressBarCompleted" class="progress-bar">
+							<img src='img/confirm_rev_64.png' class="iconk-small-tight">
+						</div>
+					</div>
+				</div>
+
+				<div id="workerStatusText" class="worker-bar">
+					<h6 id="uiState" class="inline-type">UI:
+						<span class="state-loading active">Building</span>
+						<span class="state-usable">Usable</span>
+						<span class="state-ready">Ready!</span>
+					</h6>
+					<h6 id="gameState" class="inline-type">Game:
+						<span class="state-loading active">Building</span>
+						<span class="state-usable">Playable</span>
+						<span class="state-ready">Ready!</span>
+					</h6>
+				</div>
+
+			</section>
+			<!-- /worker -->
+
+			<footer id="sponsorsLite"
+				class="ui-pane-overlay ui-pane-middle ui-pane-bottom container-center nav-opacity-lite"></footer>
+			<!-- /sponsorsLite -->
+
+		</div>
+
+		<div id="uiBlocker" class="unselectable hidden"></div>
+
+	</div>
+	<!-- /ui -->
+
+	<!-- javascript -->
+
+	<script>
+		// simple hook to remove noscript if javascript present
+		(function () {
+			var noscriptDomElement = document.getElementById("noscript");
+			if (noscriptDomElement) {
+				noscriptDomElement.parentNode.removeChild(noscriptDomElement);
+			}
+		})();
+	</script>
+	<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/92/three.min.js"></script>
+	<script src="js/lib/LAB.min.js"></script>
+	<script src="js/kaiopua/Kaiopua.js"></script>
+
+</body>
+
+</html>
